@@ -1,7 +1,6 @@
 defmodule MasterBrain.Board do
   alias MasterBrain.{Move, Score}
 
-
   @max_moves 10
 
   defstruct guesses: [], answer: [1, 2, 3, 4], current: Move.new()
@@ -42,6 +41,23 @@ defmodule MasterBrain.Board do
 
   defp row_to_hash(guess, answer) do
     %{guess: guess, score: Score.new(answer, guess)}
+  end
+
+  def add_peg(board, peg) do
+    %{ board| current: Move.add(board.current, peg)}
+  end
+  def remove_peg(%{current: move}=board) do
+    %{ board| current: Move.backspace(move)}
+  end
+  def submit_move(board) do
+    new_move = board.current |> Enum.reverse()
+
+    board
+    |> move(new_move)
+    |> clear_current()
+  end
+  def clear_current(board) do
+    %{ board| current: Move.new()}
   end
 
 end
