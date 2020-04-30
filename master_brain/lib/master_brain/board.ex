@@ -1,26 +1,47 @@
 defmodule MasterBrain.Board do
-  alias MasterBrain.Move
-  
+  alias MasterBrain.{Move, Score}
+
+
+  @max_moves 10
+
   defstruct guesses: [], answer: [1, 2, 3, 4], current: Move.new()
-  
+
   def new(answer \\ random_answer()) do
     __struct__(answer: answer)
   end
-  
+
   defp random_answer do
     (1..8)
     |> Enum.shuffle
     |> Enum.take(4)
   end
-  
+
   def move(%__MODULE__{}=board, guess) when is_list(guess) do
     %{ board | guesses: [guess|board.guesses] }
   end
-  
+
   def won?(%{answer: answer, guesses: [answer|_rest]}), do: true
   def won?(_losing_board), do: false
-  
-  def to_hash(_board) do
+
+  def done?(%{guesses: guesses} = _board) do
+    length(guesses) >= @max_moves
   end
-  
+
+  def lost?(board) do
+    done?(board) && not won?(board)
+  end
+
+  def to_hash(board) do
+    rows = Enum.map(board.guesses, &row_to_hash(&1, board.answer))
+    %{
+      rows: rows,
+      won: board |> won?,
+      lost: board |> lost?
+    }
+  end
+
+  defp row_to_hash(guess, answer) do
+    %{guess: guess, score: Score.new(answer, guess)}
+  end
+
 end
