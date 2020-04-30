@@ -8,7 +8,7 @@ defmodule MasterBrain.Score do
   # red: right color, right place
   def reds(answer, guess) do
     answer 
-    |> Enum.zip
+    |> Enum.zip(guess)
     |> Enum.count(fn {x, y} -> x == y end)
   end
 

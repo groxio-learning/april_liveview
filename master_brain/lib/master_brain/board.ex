@@ -11,6 +11,16 @@ defmodule MasterBrain.Board do
     (1..8)
     |> Enum.shuffle
     |> Enum.take(4)
-  end 
+  end
+  
+  def move(%__MODULE__{}=board, guess) when is_list(guess) do
+    %{ board | guesses: [guess|board.guesses] }
+  end
+  
+  def won?(%{answer: answer, guesses: [answer|_rest]}), do: true
+  def won?(_losing_board), do: false
+  
+  def to_hash(_board) do
+  end
   
 end
