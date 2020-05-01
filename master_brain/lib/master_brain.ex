@@ -4,15 +4,17 @@ defmodule MasterBrain do
   def new do
     Board.new()
   end
-  
+
   def add_peg(board, peg) do
     board
     |> Board.add_peg(peg)
   end
+
   def remove_peg(board) do
     board
     |> Board.remove_peg()
   end
+
   def submit_move(board) do
     board
     |> Board.submit_move()
