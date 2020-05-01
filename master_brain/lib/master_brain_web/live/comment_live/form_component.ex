@@ -12,8 +12,9 @@ defmodule MasterBrainWeb.CommentLive.FormComponent do
      |> assign(assigns)
      |> assign(:changeset, changeset)}
   end
-  
-  def validate_form(socket, params) do
+
+  def validate_form(_socket, _params) do
+    
   end
 
   @impl true

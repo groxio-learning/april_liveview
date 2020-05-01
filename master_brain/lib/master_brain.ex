@@ -45,6 +45,17 @@ defmodule MasterBrain do
     end
   end
 
+  # PubSub Functions
+
+  def broadcast(score, date_time) do
+    #NB: remember, this is a key in a Registry, not a module
+    Phoenix.PubSub.broadcast(MasterBrain.PubSub, "high_scores", {:score, score, date_time})
+  end
+
+  def subscribe(topic \\ "high_scores") do
+    Phoenix.PubSub.subscribe(MasterBrain.PubSub, topic)
+  end
+
   defmacro __using__(_opts) do
     quote do
       alias MasterBrain.{Move, Board, Score}
