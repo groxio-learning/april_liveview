@@ -22,6 +22,15 @@ defmodule MasterBrainWeb.GameLive do
     ~L"""
     <div phx-window-keydown="keydown">
     <pre><%= inspect @state %></pre>
+				<div style="display: flex;">
+					<div style="flex-direction: column;">
+						<div>
+						<%= for row <- @state.rows do %>
+							<%= raw render_row(row) %>
+						<% end %>
+						</div>
+					</div>
+				</div>
 
     <div style="display: flex; align-items: center;">
       <%= raw render_move(@state.move) %>
@@ -59,6 +68,23 @@ defmodule MasterBrainWeb.GameLive do
     </div>
     """
   end
+
+	def render_row(%{guess: guess, score: score}) do
+		[
+			render_move(guess), render_score(score)
+		]
+	end
+	def render_score(%{reds: reds, whites: whites}) do
+		[
+			color_stream(:red) |> Enum.take(reds),
+			color_stream(:white) |> Enum.take(whites)
+		]
+	end
+	def color_stream(color) do
+		Stream.repeatedly(fn -> emoji(color) end)
+	end
+	def emoji(:red), do: "🔴" #red emoji , windows + dot on keyboard
+	def emoji(:white), do: "⚪" #white emoji, windows + dot on keyboard
 
   def render_move(pegs), do: pegs |> Enum.map(&render_peg/1)
 
@@ -174,7 +200,7 @@ defmodule MasterBrainWeb.GameLive do
   end
 
   def maybe_end(%{assigns: %{state: %{won: true}}} = socket) do
-    socket 
+    socket
     |> assign(
       game_status: :success,
       score: length(socket.assigns.board.guesses)
@@ -182,12 +208,12 @@ defmodule MasterBrainWeb.GameLive do
   end
 
   def maybe_end(%{assigns: %{state: %{lost: true}}} = socket) do
-    socket 
+    socket
     |> assign(
       game_status: :failure,
       score: 11
     )
   end
 
-  def maybe_end(socket), do: socket 
+  def maybe_end(socket), do: socket
 end
