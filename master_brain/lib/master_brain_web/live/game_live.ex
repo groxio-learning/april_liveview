@@ -38,6 +38,28 @@ defmodule MasterBrainWeb.GameLive do
     """
   end
 
+  def render(%{game_status: :success} = assigns) do
+    ~L"""
+    <div style="display: flex; flex-direction: column; align-items: center">
+    <h1>Hello Master Brain</h1>
+    <p> You win! (this time..) You beat 🧠</p>
+
+    <button phx-click="start"> Start Game </button>
+    </div>
+    """
+  end
+
+  def render(%{game_status: :failure} = assigns) do
+    ~L"""
+    <div style="display: flex; flex-direction: column; align-items: center">
+    <h1>Hello Master Brain</h1>
+    <p> You lose! Good day sir! 🧠</p>
+
+    <button phx-click="start"> Start Game </button>
+    </div>
+    """
+  end
+
   def render_move(pegs), do: pegs |> Enum.map(&render_peg/1)
 
   def render_submit([_,_,_,_] = _move) do
@@ -115,6 +137,7 @@ defmodule MasterBrainWeb.GameLive do
       board: MasterBrain.submit_move(board)
     )
     |> show
+    |> maybe_end
   end
 
 
@@ -149,4 +172,22 @@ defmodule MasterBrainWeb.GameLive do
       state: Board.to_hash(board)
     )
   end
+
+  def maybe_end(%{assigns: %{state: %{won: true}}} = socket) do
+    socket 
+    |> assign(
+      game_status: :success,
+      score: length(socket.assigns.board.guesses)
+    )
+  end
+
+  def maybe_end(%{assigns: %{state: %{lost: true}}} = socket) do
+    socket 
+    |> assign(
+      game_status: :failure,
+      score: 11
+    )
+  end
+
+  def maybe_end(socket), do: socket 
 end

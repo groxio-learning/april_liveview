@@ -3,7 +3,7 @@ use Mix.Config
 # Configure your database
 config :master_brain, MasterBrain.Repo,
   username: "postgres",
-  password: "postgres",
+  password: "MoreCowBell",
   database: "master_brain_dev",
   hostname: "localhost",
   show_sensitive_data_on_connection_error: true,
