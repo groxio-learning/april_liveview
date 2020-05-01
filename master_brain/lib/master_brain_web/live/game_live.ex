@@ -23,22 +23,26 @@ defmodule MasterBrainWeb.GameLive do
   def render(%{game_status: :playing} = assigns) do
     ~L"""
     <div phx-window-keydown="keydown">
-    <pre><%= inspect @state %></pre>
-    <pre><%= inspect @board.answer %></pre>
-    <%= for row <- @state.rows do %>
-    <div style="display: flex; flex-direction: column"><%= raw render_row(row) %></div>
-    <% end %>
+			<pre><%= inspect @state %></pre>
+			<pre><%= inspect @board.answer %></pre>
+			
+			<%= for row <- @state.rows do %>
+				<div style="display: flex;">
+					<div style="display: flex; flex-direction: row;"><%= raw render_row(row) %></div>
+				</div>
+			<% end %>
 
-    <div style="display: flex; align-items: center;">
-    <%= raw render_move(@state.move) %>
-    </div>
-    <div>
-    <%= raw render_submit(@state.move) %>
-    </div>
+			<div style="display: flex; align-items: center;">
+				<%= raw render_move(@state.move) %>
+			</div>
+			
+				<div>
+				<%= raw render_submit(@state.move) %>
+			</div>
 
-    <%= for peg <- (1..8) do %>
-    <%= raw button(peg) %>
-    <% end %>
+			<%= for peg <- (1..8) do %>
+			<%= raw button(peg) %>
+			<% end %>
     </div>
 
     """
@@ -50,7 +54,12 @@ defmodule MasterBrainWeb.GameLive do
     <h1>Hello Master Brain</h1>
     <p> You win! (this time..) You beat 🧠</p>
 
-    <h2>High Scores: <%= inspect @high_scores %></h2>
+		<h2>High Scores:</h2>
+		
+		<%= for {score, date_time} <- @high_scores do %>
+			<%= score %>
+			<%= date_time %>
+		<% end %>
 
     <button phx-click="start"> Start Game </button>
     </div>
@@ -72,20 +81,23 @@ defmodule MasterBrainWeb.GameLive do
 
   def render_row(%{guess: guess, score: score}) do
     [
-      inspect(guess), render_score(score)
+      render_move(guess), render_score(score)
     ]
-  end
+	end
+	
   def render_score(%{reds: reds, whites: whites}) do
     [
       color_stream(:red) |> Enum.take(reds),
       color_stream(:white) |> Enum.take(whites)
     ]
-  end
+	end
+	
   def color_stream(color) do
     Stream.repeatedly(fn -> emoji(color) end)
-  end
-  def emoji(:red), do: "🔴" #red emoji , windows + dot on keyboard
-  def emoji(:white), do: "⚪" #white emoji, windows + dot on keyboard
+	end
+	
+  def emoji(:red), do: "🔴" # red emoji , represents red peg
+  def emoji(:white), do: "⚪" # white emoji, represents white peg
 
   def render_move(pegs), do: pegs |> Enum.map(&render_peg/1)
 
@@ -102,16 +114,16 @@ defmodule MasterBrainWeb.GameLive do
 
 
   def render_peg(peg) do
-    """
-    <div style=
-    "background-color: #{color(peg)};
-    width: 42px; height: 42px; border-radius: 50%;
-    text-align: center;
-    padding-top 20px;">
-    <div>#{peg}</div>
-    </div>
-    """
-  end
+		"""
+		<div style=
+			"background-color: #{color(peg)};
+			width: 42px; height: 42px; border-radius: 50%;
+			text-align: center;
+			padding: 1%;">
+			<div>#{peg}</div>
+		</div>
+		"""
+	end
 
   def button(number) do
     """
