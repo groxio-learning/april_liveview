@@ -35,7 +35,8 @@ defmodule MasterBrain.Board do
     %{
       rows: rows,
       won: board |> won?,
-      lost: board |> lost?
+      lost: board |> lost?,
+      move: board.current |> Move.show()
     }
   end
 

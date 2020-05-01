@@ -20,11 +20,47 @@ defmodule MasterBrainWeb.GameLive do
 
   def render(%{game_status: :playing} = assigns) do
     ~L"""
+    <div phx-window-keydown="keydown">
     <pre><%= inspect @state %></pre>
+
+    <div style="display: flex; align-items: center;">
+      <%= raw render_move(@state.move) %>
+    </div>
+    <div>
+      <%= raw render_submit(@state.move) %>
+    </div>
 
     <%= for peg <- (1..8) do %>
     <%= raw button(peg) %>
     <% end %>
+    </div>
+
+    """
+  end
+
+  def render_move(pegs), do: pegs |> Enum.map(&render_peg/1)
+
+  def render_submit([_,_,_,_] = _move) do
+    """
+    <button
+     phx-click="submit"
+     style="background-color:darkslateblue; border: 0.1rem solid floralwhite">Guess
+    </button>
+    """
+  end
+
+  def render_submit(_move), do: ""
+
+
+  def render_peg(peg) do
+    """
+    <div style=
+      "background-color: #{color(peg)};
+      width: 42px; height: 42px; border-radius: 50%;
+      text-align: center;
+      padding-top 20px;">
+      <div>#{peg}</div>
+    </div>
     """
   end
 
@@ -46,12 +82,48 @@ defmodule MasterBrainWeb.GameLive do
   def text_color(n) when n in [6], do: :midnightblue
   def text_color(_), do: :floralwhite
 
+  def handle_event("keydown", %{"key" => "Backspace"}, socket) do
+    {:noreply, remove_peg(socket)}
+  end
+
+  # default handler to ensure that we don't crash on random key
+  # strokes
+  def handle_event("keydown", _metadata, socket) do
+    {:noreply, socket}
+  end
+
+
   def handle_event("start", _metadata, socket) do
     {:noreply, start_game(socket)}
   end
 
   def handle_event("guess", %{"number" => number_string}, socket) do
     {:noreply, add_peg(socket, number_string)}
+  end
+
+
+  def handle_event("submit", _metadata, socket) do
+    {:noreply, socket |> submit_move}
+  end
+
+
+  # reducers
+
+  def submit_move(%{assigns: %{board: board}} = socket) do
+    socket
+    |> assign(
+      board: MasterBrain.submit_move(board)
+    )
+    |> show
+  end
+
+
+  def remove_peg(%{assigns: %{board: board}} = socket) do
+    socket
+    |> assign(
+      board: MasterBrain.remove_peg(board)
+    )
+    |> show
   end
 
   def add_peg(%{assigns: %{board: board}} = socket, peg) do
