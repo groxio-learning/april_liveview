@@ -4,7 +4,9 @@ defmodule MasterBrainWeb.GameLive do
   import Phoenix.HTML, only: [raw: 1]
 
   def mount(_params, _session, socket) do
-    {:ok, assign(socket, game_status: :idle)}
+    if connected?(socket), do:  MasterBrain.subscribe()
+
+    {:ok, assign(socket, game_status: :idle, high_scores: [])}
   end
 
   def render(%{game_status: :idle} = assigns) do
@@ -21,21 +23,22 @@ defmodule MasterBrainWeb.GameLive do
   def render(%{game_status: :playing} = assigns) do
     ~L"""
     <div phx-window-keydown="keydown">
-    	<pre><%= inspect @state %></pre>
-			<%= for row <- @state.rows do %>
-				<div style="display: flex; flex-direction: column"><%= raw render_row(row) %></div>
-			<% end %>
+    <pre><%= inspect @state %></pre>
+    <pre><%= inspect @board.answer %></pre>
+    <%= for row <- @state.rows do %>
+    <div style="display: flex; flex-direction: column"><%= raw render_row(row) %></div>
+    <% end %>
 
-			<div style="display: flex; align-items: center;">
-				<%= raw render_move(@state.move) %>
-			</div>
-			<div>
-				<%= raw render_submit(@state.move) %>
-			</div>
+    <div style="display: flex; align-items: center;">
+    <%= raw render_move(@state.move) %>
+    </div>
+    <div>
+    <%= raw render_submit(@state.move) %>
+    </div>
 
-			<%= for peg <- (1..8) do %>
-			<%= raw button(peg) %>
-			<% end %>
+    <%= for peg <- (1..8) do %>
+    <%= raw button(peg) %>
+    <% end %>
     </div>
 
     """
@@ -46,6 +49,8 @@ defmodule MasterBrainWeb.GameLive do
     <div style="display: flex; flex-direction: column; align-items: center">
     <h1>Hello Master Brain</h1>
     <p> You win! (this time..) You beat 🧠</p>
+
+    <h2>High Scores: <%= inspect @high_scores %></h2>
 
     <button phx-click="start"> Start Game </button>
     </div>
@@ -58,35 +63,37 @@ defmodule MasterBrainWeb.GameLive do
     <h1>Hello Master Brain</h1>
     <p> You lose! Good day sir! 🧠</p>
 
+    <h2>High Scores: <%= inspect @high_scores %></h2>
+
     <button phx-click="start"> Start Game </button>
     </div>
     """
   end
 
-	def render_row(%{guess: guess, score: score}) do
-		[
-			inspect(guess), render_score(score)
-		]
-	end
-	def render_score(%{reds: reds, whites: whites}) do
-		[
-			color_stream(:red) |> Enum.take(reds),
-			color_stream(:white) |> Enum.take(whites)
-		]
-	end
-	def color_stream(color) do
-		Stream.repeatedly(fn -> emoji(color) end)
-	end
-	def emoji(:red), do: "🔴" #red emoji , windows + dot on keyboard
-	def emoji(:white), do: "⚪" #white emoji, windows + dot on keyboard
+  def render_row(%{guess: guess, score: score}) do
+    [
+      inspect(guess), render_score(score)
+    ]
+  end
+  def render_score(%{reds: reds, whites: whites}) do
+    [
+      color_stream(:red) |> Enum.take(reds),
+      color_stream(:white) |> Enum.take(whites)
+    ]
+  end
+  def color_stream(color) do
+    Stream.repeatedly(fn -> emoji(color) end)
+  end
+  def emoji(:red), do: "🔴" #red emoji , windows + dot on keyboard
+  def emoji(:white), do: "⚪" #white emoji, windows + dot on keyboard
 
   def render_move(pegs), do: pegs |> Enum.map(&render_peg/1)
 
   def render_submit([_,_,_,_] = _move) do
     """
     <button
-     phx-click="submit"
-     style="background-color:darkslateblue; border: 0.1rem solid floralwhite">Guess
+    phx-click="submit"
+    style="background-color:darkslateblue; border: 0.1rem solid floralwhite">Guess
     </button>
     """
   end
@@ -97,11 +104,11 @@ defmodule MasterBrainWeb.GameLive do
   def render_peg(peg) do
     """
     <div style=
-      "background-color: #{color(peg)};
-      width: 42px; height: 42px; border-radius: 50%;
-      text-align: center;
-      padding-top 20px;">
-      <div>#{peg}</div>
+    "background-color: #{color(peg)};
+    width: 42px; height: 42px; border-radius: 50%;
+    text-align: center;
+    padding-top 20px;">
+    <div>#{peg}</div>
     </div>
     """
   end
@@ -148,8 +155,26 @@ defmodule MasterBrainWeb.GameLive do
     {:noreply, socket |> submit_move}
   end
 
+  def handle_info({:score, score, date_time}, socket) do
+    {:noreply, socket |> set_high_score(score, date_time)}
+  end
+
 
   # reducers
+
+  def set_high_score(%{assigns: %{high_scores: high_scores}} = socket, score, date_time) do
+
+    high_scores =
+      [{score, date_time} | high_scores]
+      |> Enum.sort()
+      |> Enum.take(3)
+
+    socket
+    |> assign(
+      high_scores: high_scores
+    )
+
+  end
 
   def submit_move(%{assigns: %{board: board}} = socket) do
     socket
@@ -193,19 +218,31 @@ defmodule MasterBrainWeb.GameLive do
     )
   end
 
-  def maybe_end(%{assigns: %{state: %{won: true}}} = socket) do
+  defp broadcast_score(socket) do
+    score = length(socket.assigns.board.guesses)
+    date_time = DateTime.utc_now()
+
+    MasterBrain.broadcast(score, date_time)
     socket
+  end
+
+
+  def maybe_end(%{assigns: %{state: %{won: true}}} = socket) do
+
+    socket
+    |> broadcast_score
     |> assign(
       game_status: :success,
-      score: length(socket.assigns.board.guesses)
+    score: length(socket.assigns.board.guesses)
     )
   end
 
   def maybe_end(%{assigns: %{state: %{lost: true}}} = socket) do
     socket
+    |> broadcast_score
     |> assign(
       game_status: :failure,
-      score: 11
+    score: 11
     )
   end
 
