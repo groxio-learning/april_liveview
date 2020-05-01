@@ -1,0 +1,32 @@
+<h1>Show Comment</h1>
+
+<%= if @live_action in [:edit] do %>
+  <%= live_modal @socket, MasterBrainWeb.CommentLive.FormComponent,
+    id: @comment.id,
+    title: @page_title,
+    action: @live_action,
+    comment: @comment,
+    return_to: Routes.comment_show_path(@socket, :show, @comment) %>
+<% end %>
+
+<ul>
+
+  <li>
+    <strong>Body:</strong>
+    <%= @comment.body %>
+  </li>
+
+  <li>
+    <strong>Reaction:</strong>
+    <%= @comment.reaction %>
+  </li>
+
+  <li>
+    <strong>Username:</strong>
+    <%= @comment.username %>
+  </li>
+
+</ul>
+
+<span><%= live_patch "Edit", to: Routes.comment_show_path(@socket, :edit, @comment), class: "button" %></span>
+<span><%= live_redirect "Back", to: Routes.comment_index_path(@socket, :index) %></span>
