@@ -3,7 +3,7 @@ use Mix.Config
 # Configure your database
 config :counter, Counter.Repo,
   username: "postgres",
-  password: "postgres",
+  password: "MoreCowBell",
   database: "counter_dev",
   hostname: "localhost",
   show_sensitive_data_on_connection_error: true,
