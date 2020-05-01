@@ -18,6 +18,8 @@ defmodule MasterBrainWeb.Router do
     pipe_through :browser
 
     live "/", PageLive, :index
+
+    live "/board", GameLive
     
     live "/comments", CommentLive.Index, :index
     live "/comments/new", CommentLive.Index, :new
