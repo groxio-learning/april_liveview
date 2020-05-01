@@ -21,27 +21,21 @@ defmodule MasterBrainWeb.GameLive do
   def render(%{game_status: :playing} = assigns) do
     ~L"""
     <div phx-window-keydown="keydown">
-    <pre><%= inspect @state %></pre>
-				<div style="display: flex;">
-					<div style="flex-direction: column;">
-						<div>
-						<%= for row <- @state.rows do %>
-							<%= raw render_row(row) %>
-						<% end %>
-						</div>
-					</div>
-				</div>
+    	<pre><%= inspect @state %></pre>
+			<%= for row <- @state.rows do %>
+				<div style="display: flex; flex-direction: column"><%= raw render_row(row) %></div>
+			<% end %>
 
-    <div style="display: flex; align-items: center;">
-      <%= raw render_move(@state.move) %>
-    </div>
-    <div>
-      <%= raw render_submit(@state.move) %>
-    </div>
+			<div style="display: flex; align-items: center;">
+				<%= raw render_move(@state.move) %>
+			</div>
+			<div>
+				<%= raw render_submit(@state.move) %>
+			</div>
 
-    <%= for peg <- (1..8) do %>
-    <%= raw button(peg) %>
-    <% end %>
+			<%= for peg <- (1..8) do %>
+			<%= raw button(peg) %>
+			<% end %>
     </div>
 
     """
@@ -71,7 +65,7 @@ defmodule MasterBrainWeb.GameLive do
 
 	def render_row(%{guess: guess, score: score}) do
 		[
-			render_move(guess), render_score(score)
+			inspect(guess), render_score(score)
 		]
 	end
 	def render_score(%{reds: reds, whites: whites}) do
